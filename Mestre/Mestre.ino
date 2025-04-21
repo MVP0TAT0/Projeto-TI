@@ -1,18 +1,23 @@
-#include <SoftwareSerial.h>
+#include <SoftwareSerial.h>	// Biblioteca para melhor controlo de serial communication
 
-int botoes[] = { 9, 8, 7, 6, 5, 4, 3 };
-int piezo = 2;
-int potPin = A0;
+int botoes[] = { 9, 8, 7, 6, 5, 4, 3 };	// Pinos dos botões
+int piezo = 2;													// Pino piezo buzzer
+int potPin = A0;												// Pino potenciómetro
 
-float notas[] = { 261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88 };
+float notas[] = { 261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88 };	// Frequências das notas
 
-SoftwareSerial ledSerial(10, 11); // RX, TX (apenas TX será usado)
+SoftwareSerial ledSerial(10, 11); // RX, TX (Sendo o mestre, só usa TX)
 
 void setup() {
+
+	// Setup dos botões usando as resistências interiores
 	for (int i = 0; i < 7; i++) {
 		pinMode(botoes[i], INPUT_PULLUP);
 	}
+	
 	pinMode(piezo, OUTPUT);
+
+	// Setup de Serial Communication
 	ledSerial.begin(9600);
 	Serial.begin(9600);
 }

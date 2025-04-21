@@ -1,5 +1,5 @@
-#include <Adafruit_NeoPixel.h>
-#include <SoftwareSerial.h>
+#include <Adafruit_NeoPixel.h>  // Biblioteca para controlar neopixel
+#include <SoftwareSerial.h>     // Biblioteca para melhor controlo de serial communication
 
 #define LED_PIN 5     // Fita LED
 #define NUM_LEDS 8    // Número de Leds da fita
@@ -68,7 +68,10 @@ void loop() {
 
     // Medir distância e ajustar brilho
     long distance = readDistanceCM();
-    int brightness = map(constrain(distance, 5, 100), 5, 100, 10, 100);  // Mapear 5-100cm → 10-255 brilho
+    Serial.print("Distância: ");
+    Serial.print(distance);
+    Serial.println(" cm");
+    int brightness = map(constrain(distance, 5, 100), 5, 100, 0, 255);  // Mapear 5-100cm → 10-255 brilho
     strip.setBrightness(brightness);
 
     strip.show();
