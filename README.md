@@ -8,7 +8,7 @@
 
 **Milestone 2 — Conceptualisation and Prototyping (21 April)**
 Conceptualisation and early prototyping of the product. This milestone comprises two deliverables:
-> 1. A report (c. 5000 words) describing the concept, the steps of the interaction design methodology involved, and the implementation strategy (including a simple description of the plan and analysis/identification of critical issues that might obstruct the development). We expect you to provide as much prototyping detail as possible (e.g. 3D sketches, 2D projections, sketches, or high-fidelity prototypes of any object that you intend to build).
+> A report (c. 5000 words) describing the concept, the steps of the interaction design methodology involved, and the implementation strategy (including a simple description of the plan and analysis/identification of critical issues that might obstruct the development). We expect you to provide as much prototyping detail as possible (e.g. 3D sketches, 2D projections, sketches, or high-fidelity prototypes of any object that you intend to build).
 
  
-> 2. A partial prototype implementation 25-50% of the final product. Grading for this milestone will take into account the development stage. The Arduino part of the implementation should include a schematic for the circuit and the corresponding code
+> A partial prototype implementation 25-50% of the final product. Grading for this milestone will take into account the development stage. The Arduino part of the implementation should include a schematic for the circuit and the corresponding code
