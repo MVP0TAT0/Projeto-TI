@@ -1,7 +1,9 @@
 **Minimum requirements for the project:**
-• At least 2 types of sensory physical inputs (e.g. movement, light, temperature, sound, etc.)
-• At least 1 type of physical output or actuator
-• Integration of, at least, one capability related to sound or image processing in the application component
+> At least 2 types of sensory physical inputs (e.g. movement, light, temperature, sound, etc.)
+
+> At least 1 type of physical output or actuator
+
+> Integration of, at least, one capability related to sound or image processing in the application component
 
 
 **Milestone 2 — Conceptualisation and Prototyping (21 April)**
