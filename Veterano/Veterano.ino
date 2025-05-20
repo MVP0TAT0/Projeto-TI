@@ -69,9 +69,9 @@ void loop() {
 
 			// Enviar comandos via Serial Communication, dependendo do botão
 			if (i == 0) {  								// Primeiro botão envia comando para ligar a fita Neopixel
-				ledSerial.println("NEO");
+				ledSerial.println("LED1");
 			} else if (i == 1) {  				// Segundo botão envia comando para ligar o LED normal (não temos mais fitas neopixel por enquanto)
-				ledSerial.println("LED");
+				ledSerial.println("LED2");
 			}
 
 			notaTocada = true;

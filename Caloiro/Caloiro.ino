@@ -7,11 +7,11 @@
 // ---------------------
 // Definições de pinos
 // ---------------------
-#define LED_PIN 5     // Fita LED
-#define NUM_LEDS 8    // Número de Leds da fita
-#define LED_NORMAL 4  // LED normal no pino 4 (para simular outra fita que nao temos ainda)
-#define TRIG_PIN 2    // Trigger ultrassonico
-#define ECHO_PIN 3    // Echo ultrassonico
+#define LED_PIN 5   // Fita LED
+#define LED_PIN2 4  // Fita LED 2
+#define NUM_LEDS 5  // Número de leds das fitas
+#define TRIG_PIN 2  // Trigger ultrassonico
+#define ECHO_PIN 3  // Echo ultrassonico
 
 // ---------------------
 // Medir distância com o sensor ultrassónico
@@ -31,8 +31,10 @@ long readDistanceCM() {
 // ---------------------
 // Inicializações globais
 // ---------------------
-SoftwareSerial mySerial(8, 7);  // Iniciar a Serial Communication via SoftwareSerial com pinos digitais
-Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);   // Iniciar a fita LED
+SoftwareSerial mySerial(8, 7);                                       // Iniciar a Serial Communication via SoftwareSerial com pinos digitais
+Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);    // Iniciar a fita LED
+Adafruit_NeoPixel strip2(NUM_LEDS, LED_PIN2, NEO_GRB + NEO_KHZ800);  // Segunda fita LED
+
 
 // Variáveis de animação dos LEDs
 bool animationRunning = false;  // Verifica se a animação está a correr
@@ -43,18 +45,18 @@ int position = 0;               // Posição dos leds da animação
 // ---------------------
 void setup() {
 
-  // LED normal apenas para testar (não havendo mais fitas LED)
-  pinMode(LED_NORMAL, OUTPUT);
-  digitalWrite(LED_NORMAL, LOW);
-
   // Sensor ultrassónico
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
-  // Fita LED
+  // Fitas LED
   strip.begin();
   strip.setBrightness(26);  // Brilho default
   strip.show();
+
+  strip2.begin();
+  strip2.setBrightness(26);
+  strip2.show();
 
   // Serial Communication
   mySerial.begin(9600);
@@ -73,13 +75,12 @@ void loop() {
     Serial.println("Recebido: [" + comando + "]");  // Debug para ver se está o Escravo está a receber os dados do Mestre
 
     // Se recebe o comando NEO (neopixel) e a animação não estiver a correr, executa este código
-    if (comando == "NEO" && !animationRunning) {
+    if (comando == "LED1" && !animationRunning) {
       animationRunning = true;
       position = 0;
-    } else if (comando == "LED") {    // Se receber o comando LED do outro botão, acende o LED normal
-      digitalWrite(LED_NORMAL, HIGH);
-      delay(10);  // LED acende por 0.5s
-      digitalWrite(LED_NORMAL, LOW);
+    } else if (comando == "LED2" && !animationRunning) {  // Se receber o comando LED do outro botão, acende o LED normal
+      animationRunning = true;
+      position = 5;
     }
   }
 
@@ -104,7 +105,7 @@ void loop() {
     Serial.println(" cm");
 
     //Mapear 5-100cm → 10-255 brilho
-    int brightness = map(constrain(distance, 5, 100), 5, 100, 0, 255);  
+    int brightness = map(constrain(distance, 5, 100), 5, 100, 0, 255);
     strip.setBrightness(brightness);
 
     // Atualiza os LEDs
