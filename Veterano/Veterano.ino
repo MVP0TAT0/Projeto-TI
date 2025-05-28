@@ -1,14 +1,12 @@
-// ---------------------
-// Bibliotecas
-// ---------------------
-#include <SoftwareSerial.h>  // Biblioteca para melhor controlo de serial communication
+#include <SoftwareSerial.h>
 
 // ---------------------
 // Definições de pinos
 // ---------------------
-int botoes[] = { 9, 8, 7, 6, 5, 4, 3 };  // Pinos dos botões
-int piezo = 2;                           // Pino piezo buzzer
-int potPin = A0;                         // Pino potenciómetro
+int botoes[] = { 9, 8, 7, 6, 5, 4 };
+int corButton = 3;
+int piezo = 2;
+int potPin = A0;
 
 // ---------------------
 // Notas musicais
@@ -20,28 +18,46 @@ float notas[] = {
 	349.23,  // Fá
 	392.00,  // Sol
 	440.00,  // Lá
-	493.88   // Si — Iremos remover futuramente porque só iremos ter 6 teclas
 };
 
 // ---------------------
-// Comunicação serial com o escravo (NeoPixel)
+// Serial communication
 // ---------------------
-SoftwareSerial ledSerial(10, 11);  // RX, TX (Sendo o mestre, só usa TX, ou seja, transmite)
+SoftwareSerial ledSerial(10, 11);  // RX, TX
+
+// ---------------------
+// Variáveis
+// ---------------------
+bool corEstadoAtual = HIGH;
+bool corEstadoAnterior = HIGH;
+
+int sequenciaAlvo[] = { 0, 0, 1, 0, 3, 2 };
+int indiceSequencia = 0;
+unsigned long ultimoToque = 0;
+const unsigned long tempoMaxEntreToques = 3000;
+unsigned long debounceAnterior[6] = { 0 };
+const unsigned long tempoDebounce = 200;
+bool estadoAnteriorBotoes[6] = { HIGH, HIGH, HIGH, HIGH, HIGH, HIGH };
+
+bool tocarMusica = false;
+
+// Idle
+const unsigned long tempoIdle = 30000;  // tempo sem interação (30s)
+int ultimosBotoes[10];                  // buffer circular
+int posBuffer = 0;
+bool bufferCheio = false;
 
 // ---------------------
 // Setup
 // ---------------------
 void setup() {
-
-	// Setup dos botões usando as resistências internas
-	for (int i = 0; i < 7; i++) {
+	for (int i = 0; i < 6; i++) {
 		pinMode(botoes[i], INPUT_PULLUP);
 	}
 
-	// Buzzer
+	pinMode(corButton, INPUT_PULLUP);
 	pinMode(piezo, OUTPUT);
 
-	// Setup de Serial Communication
 	ledSerial.begin(9600);
 	Serial.begin(9600);
 }
@@ -50,39 +66,137 @@ void setup() {
 // Loop
 // ---------------------
 void loop() {
-	bool notaTocada = false;
+	unsigned long agora = millis();
 
-	// Se algum dos botões for pressionar, executa o seguinte código
-	for (int i = 0; i < 7; i++) {
-		if (digitalRead(botoes[i]) == LOW) {
-			// Leitura do potenciómetro
-			float pot = analogRead(potPin);                       // Valor entre 0–1023
-
-			// Mapear o valor do potenciómetro para um pitch entre 50% a 150%
-			float pitchFactor = map(pot, 0, 1023, 50, 150);
-
-			// Ajustar frequência da nota (o som fica baixo sem isto)
-			float frequencia = notas[i] * (pitchFactor / 100.0);
-
-			// Toca a nota
-			tone(piezo, frequencia, 250);  // Toca nota ajustada por 250ms
-
-			// Enviar comandos via Serial Communication, dependendo do botão
-			if (i == 0) {  								// Primeiro botão envia comando para ligar a fita Neopixel
-				ledSerial.println("LED1");
-			} else if (i == 1) {  				// Segundo botão envia comando para ligar o LED normal (não temos mais fitas neopixel por enquanto)
-				ledSerial.println("LED2");
-			}
-
-			notaTocada = true;
-			break;
-		}
+	if (tocarMusica) {
+		tocarHappyBirthday();
+		tocarMusica = false;
+		return;
 	}
 
-	// Se o botão não está a ser tocado, desliga o som do piezo buzzer
-	if (!notaTocada) {
+	// Verifica se está idle há tempoIdle
+	if (agora - ultimoToque >= tempoIdle && (posBuffer > 0 || bufferCheio)) {
+		Serial.println("⏳ Idle: Tocar últimas 10 notas");
+		tocarUltimasNotas();
+		ultimoToque = agora;  // evitar repetição contínua
+		return;
+	}
+
+	bool algumBotaoPressionado = false;
+
+	for (int i = 0; i < 6; i++) {
+		bool estadoAtual = digitalRead(botoes[i]);
+
+		if (estadoAnteriorBotoes[i] == HIGH && estadoAtual == LOW) {
+			if (agora - debounceAnterior[i] > tempoDebounce) {
+				debounceAnterior[i] = agora;
+
+				ultimoToque = agora;  // atualizar atividade
+
+				// Adicionar botão ao buffer
+				ultimosBotoes[posBuffer] = i;
+				posBuffer = (posBuffer + 1) % 10;
+				if (posBuffer == 0) bufferCheio = true;
+
+				// Lógica da sequência
+				if (agora - ultimoToque > tempoMaxEntreToques) {
+					indiceSequencia = 0;
+				}
+
+				if (i == sequenciaAlvo[indiceSequencia]) {
+					indiceSequencia++;
+					if (indiceSequencia >= 6) {
+						Serial.println("Happy birthdayyyy tooo youuuuuu");
+						tocarMusica = true;
+						indiceSequencia = 0;
+						return;
+					}
+				} else {
+					indiceSequencia = 0;
+				}
+			}
+		}
+
+		if (estadoAtual == LOW) {
+			algumBotaoPressionado = true;
+
+			float pot = analogRead(potPin);
+			float pitchFactor = map(pot, 0, 1023, 50, 150);
+			float frequencia = notas[i] * (pitchFactor / 100.0);
+			tone(piezo, frequencia);
+
+			if (estadoAnteriorBotoes[i] == HIGH) {
+				ledSerial.println("LED" + String(i + 1));
+			}
+		}
+
+		if (estadoAnteriorBotoes[i] == LOW && estadoAtual == HIGH) {
+			noTone(piezo);
+		}
+
+		estadoAnteriorBotoes[i] = estadoAtual;
+	}
+
+	// Botão cor
+	corEstadoAtual = digitalRead(corButton);
+	if (corEstadoAnterior == HIGH && corEstadoAtual == LOW) {
+		ledSerial.println("cor");
+	}
+	corEstadoAnterior = corEstadoAtual;
+
+	if (!algumBotaoPressionado) {
 		noTone(piezo);
 	}
 
 	delay(10);
 }
+
+// ---------------------
+// Happy birthday!!
+// ---------------------
+void tocarHappyBirthday() {
+	int melodia[] = {
+		264, 264, 297, 264, 352, 330,
+		264, 264, 297, 264, 396, 352,
+		264, 264, 528, 440, 352, 330, 297,
+		466, 466, 440, 352, 396, 352
+	};
+
+	int duracoes[] = {
+		250, 250, 500, 500, 500, 1000,
+		250, 250, 500, 500, 500, 1000,
+		250, 250, 500, 500, 500, 500, 1000,
+		250, 250, 500, 500, 500, 1000
+	};
+
+	for (int i = 0; i < 25; i++) {
+		tone(piezo, melodia[i], duracoes[i]);
+		delay(duracoes[i] * 1.3);
+	}
+
+	noTone(piezo);
+}
+
+// -----------------------------------
+// Modo eco (toca as ultimas 10 notas)
+// -----------------------------------
+void tocarUltimasNotas() {
+  int totalNotas = bufferCheio ? 10 : posBuffer;
+  int idx = bufferCheio ? posBuffer : 0;
+
+  for (int i = 0; i < totalNotas; i++) {
+    int notaIdx = ultimosBotoes[(idx + i) % 10];
+    float pot = analogRead(potPin);
+    float pitchFactor = map(pot, 0, 1023, 50, 150);
+    float frequencia = notas[notaIdx] * (pitchFactor / 100.0);
+    tone(piezo, frequencia, 300);
+
+    // Ativar LEDs
+    ledSerial.println("LED" + String(notaIdx + 1));
+
+    delay(350);
+  }
+
+  noTone(piezo);
+}
+
