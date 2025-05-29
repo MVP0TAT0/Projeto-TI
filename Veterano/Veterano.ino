@@ -31,20 +31,23 @@ SoftwareSerial ledSerial(10, 11);  // RX, TX
 bool corEstadoAtual = HIGH;
 bool corEstadoAnterior = HIGH;
 
+// Happy birthdayyyy tooo youuuuuuuuuuuuuuuuuuuu
 int sequenciaAlvo[] = { 0, 0, 1, 0, 3, 2 };
 int indiceSequencia = 0;
+bool tocarMusica = false;
+
+// Modo eco
 unsigned long ultimoToque = 0;
 const unsigned long tempoMaxEntreToques = 3000;
 unsigned long debounceAnterior[6] = { 0 };
 const unsigned long tempoDebounce = 200;
 bool estadoAnteriorBotoes[6] = { HIGH, HIGH, HIGH, HIGH, HIGH, HIGH };
 
-bool tocarMusica = false;
 
 // Idle
 const unsigned long tempoIdle = 30000;  // tempo sem interação (30s)
 int ultimosBotoes[10];                  // buffer circular
-int posBuffer = 0;
+int posBuffer = 0;											// posição do inicial do buffer
 bool bufferCheio = false;
 
 // ---------------------
@@ -74,9 +77,8 @@ void loop() {
 		return;
 	}
 
-	// Verifica se está idle há tempoIdle
+	// Verifica se está idle durante 30sec
 	if (agora - ultimoToque >= tempoIdle && (posBuffer > 0 || bufferCheio)) {
-		Serial.println("⏳ Idle: Tocar últimas 10 notas");
 		tocarUltimasNotas();
 		ultimoToque = agora;  // evitar repetição contínua
 		return;
@@ -152,7 +154,7 @@ void loop() {
 }
 
 // ---------------------
-// Happy birthday!!
+// Happy birthdayyyy!!
 // ---------------------
 void tocarHappyBirthday() {
 	int melodia[] = {
@@ -199,4 +201,3 @@ void tocarUltimasNotas() {
 
   noTone(piezo);
 }
-

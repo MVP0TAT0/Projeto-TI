@@ -13,13 +13,13 @@
 #define LED_PIN4 9   // Fita LED 4
 #define LED_PIN5 12  // Fita LED 5
 #define LED_PIN6 13  // Fita LED 6
-#define NUM_LEDS 5   // Número de leds das fitas
+#define NUM_LEDS 5   // Número de leds de cada fitas
 #define TRIG_PIN 2   // Trigger ultrassonico
-#define ECHO_PIN 3   // Echo ultrassonico
+#define ECHO_PIN 3   // ECHO ECHo ECho Echo echo ultrassonico
 
-// ---------------------
+// -----------------------------------------
 // Medir distância com o sensor ultrassónico
-// ---------------------
+// -----------------------------------------
 long readDistanceCM() {
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
@@ -37,7 +37,7 @@ long readDistanceCM() {
 // -----------------------------------
 SoftwareSerial mySerial(8, 7);  // Iniciar a Serial Communication via SoftwareSerial com pinos digitais
 
-// Definir pins de LEDs e numero de LED strips
+// Definir numero de LED strips e pins de LEDs
 #define NUM_STRIPS 6
 int ledPins[NUM_STRIPS] = { 5, 4, 6, 9, 12, 13 };  // LED_PIN1, LED_PIN2, etc
 
@@ -63,6 +63,7 @@ void setup() {
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
+	// Leds
   for (int i = 0; i < NUM_STRIPS; i++) {
     strips[i] = new Adafruit_NeoPixel(NUM_LEDS, ledPins[i], NEO_GRB + NEO_KHZ800);
     strips[i]->begin();
@@ -79,7 +80,7 @@ void setup() {
 // Loop
 // ---------------------
 void loop() {
-	// Leitura de comandos do mestre
+	// Leitura de comandos do veterano
 	if (mySerial.available()) {
 		String comando = mySerial.readStringUntil('\n');
 		comando.trim();
