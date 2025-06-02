@@ -47,7 +47,7 @@ bool estadoAnteriorBotoes[6] = { HIGH, HIGH, HIGH, HIGH, HIGH, HIGH };
 // Idle
 const unsigned long tempoIdle = 30000;  // tempo sem interação (30s)
 int ultimosBotoes[10];                  // buffer circular
-int posBuffer = 0;											// posição do inicial do buffer
+int posBuffer = 0;                      // posição do inicial do buffer
 bool bufferCheio = false;
 
 // ---------------------
@@ -127,8 +127,13 @@ void loop() {
 			float frequencia = notas[i] * (pitchFactor / 100.0);
 			tone(piezo, frequencia);
 
-			if (estadoAnteriorBotoes[i] == HIGH) {
+			// Debounce para nao haver congestionamento de comunicação e não "encravar" a animação
+			static unsigned long ultimaMensagemLED = 0;
+			const unsigned long intervaloLED = 30;
+
+			if (millis() - ultimaMensagemLED >= intervaloLED) {
 				ledSerial.println("LED" + String(i + 1));
+				ultimaMensagemLED = millis();
 			}
 		}
 
@@ -183,21 +188,21 @@ void tocarHappyBirthday() {
 // Modo eco (toca as ultimas 10 notas)
 // -----------------------------------
 void tocarUltimasNotas() {
-  int totalNotas = bufferCheio ? 10 : posBuffer;
-  int idx = bufferCheio ? posBuffer : 0;
+	int totalNotas = bufferCheio ? 10 : posBuffer;
+	int idx = bufferCheio ? posBuffer : 0;
 
-  for (int i = 0; i < totalNotas; i++) {
-    int notaIdx = ultimosBotoes[(idx + i) % 10];
-    float pot = analogRead(potPin);
-    float pitchFactor = map(pot, 0, 1023, 50, 150);
-    float frequencia = notas[notaIdx] * (pitchFactor / 100.0);
-    tone(piezo, frequencia, 300);
+	for (int i = 0; i < totalNotas; i++) {
+		int notaIdx = ultimosBotoes[(idx + i) % 10];
+		float pot = analogRead(potPin);
+		float pitchFactor = map(pot, 0, 1023, 50, 150);
+		float frequencia = notas[notaIdx] * (pitchFactor / 100.0);
+		tone(piezo, frequencia, 300);
 
-    // Ativar LEDs
-    ledSerial.println("LED" + String(notaIdx + 1));
+		// Ativar LEDs
+		ledSerial.println("LED" + String(notaIdx + 1));
 
-    delay(350);
-  }
+		delay(350);
+	}
 
-  noTone(piezo);
+	noTone(piezo);
 }
